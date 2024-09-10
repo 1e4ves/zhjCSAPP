@@ -143,18 +143,16 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return ((~x) & y) | (x & (~y));
+  return ~((~x) & y) & ~(x & (~y));
 }
-/* 
- * tmin - return minimum two's complement integer 
+ /* tmin - return minimum two's complement integer 
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 4
  *   Rating: 1
  */
 int tmin(void) {
 
-  return 2;
-
+  return (1 << 31);
 }
 //2
 /*
@@ -164,8 +162,11 @@ int tmin(void) {
  *   Max ops: 10
  *   Rating: 1
  */
+//011111111
 int isTmax(int x) {
-  return 2;
+  //0000
+  //10000
+  return (!~(x ^ (x + 1))) & !!(x + 1);
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -176,7 +177,9 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+  int t = 0x55555555;
+  int a = 0xAAAAAAAA;
+  return !((x & a)+ t + 1);
 }
 /* 
  * negate - return -x 
@@ -186,7 +189,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return ~x + 1;
 }
 //3
 /* 
@@ -198,8 +201,33 @@ int negate(int x) {
  *   Max ops: 15
  *   Rating: 3
  */
+//0x30 = 00110000
+//0x39 = 00111001
+// 101x
+// 11xx
+//00000110xxx
+//00000111111
+
+// 判断 x == y  :   !((x & y) ^ (x | y));
+//因为x与y 一定有一位不一样
+
 int isAsciiDigit(int x) {
-  return 2;
+  int l = 0x30, r = 0x39;
+  //前面有无1
+
+
+  // int t = !(x >> 6);
+  // std:: cout << !(x >> 6) << std::endl;
+  //中间是否为11
+  // int y = ((x >> 4) & 1) & ((x >> 5) & 1);
+  int y = (x >> 4) & 3;
+  // std::cout << y << std::endl;
+  int t = (x >> 1) & 7;
+  // std:: cout << t << std::endl;
+  // std::cout << (!(x & 8) | (!((t & 4) ^ (t | 4)))) << std::endl;
+  return (!(x >> 6)) & (!(y ^ 3)) & (!(x & 8) | (!(t ^ 4)));
+
+ 
 }
 /* 
  * conditional - same as x ? y : z 
@@ -245,8 +273,51 @@ int logicalNeg(int x) {
  *  Max ops: 90
  *  Rating: 4
  */
+
 int howManyBits(int x) {
-  return 0;
+  int X = x;
+  //符号位
+  int t = 0xff;
+  int minus = (~1) + 1;
+  int sgn = (x >> 31) & 1;
+  int mid = 16; 
+  int len = 4;
+
+  int x = (((~sgn) + 1) ^ X); 
+  int msk = (t << mid + 8) + (t << mid);
+  //前16位是否存在1
+  int flag16 = !!((msk) & x);
+
+
+  //确定下一个mid
+  len = 3;
+  //1 + 0 - 
+  mid = mid + ((flag16 + minus) ^ (1 << len))+ 2 + ~flag16;
+  msk = t << mid;
+  int flag8 = !!(msk & x);
+
+  
+
+  len = 2;
+  mid = mid + ((flag8 + minus) ^ (1 << len)) + 2 + ~flag8;
+  msk = 0xf << mid;
+  int flag4 = !!(msk & x);
+
+
+  len = 1;
+  mid = mid + ((flag4 + minus) ^ (1 << len)) + 2 + ~flag4;
+  msk = 3 << mid;
+  int flag2 = !!(msk & x);
+
+
+  len = 0;
+  mid = mid + ((flag2 + minus) ^ (1 << len)) + 2 + ~flag2;
+  msk = 1 << mid;
+  int flag = !!(msk & x);
+
+  mid = mid + ((flag + minus) ^ (1 << len)) + 2 + ~flag;
+  // cout << mid << endl;
+  return mid + ((x >> mid) & 1) + 1;
 }
 //float
 /* 
