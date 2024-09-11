@@ -143,7 +143,10 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return ~((~x) & y) & ~(x & (~y));
+  int a = (~x ) & y;
+  int b = (x) & (~y);
+  return ~(~a & ~b);
+  // return ~(~((~x) & y)) & (~(x & (~y)));
 }
  /* tmin - return minimum two's complement integer 
  *   Legal ops: ! ~ & ^ | + << >>
@@ -237,7 +240,11 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+  int op = !!x;
+  int t = ~op + 1;
+  // printf("%d", t);
+  return (y & t) + (z & ~t);
+
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -246,8 +253,17 @@ int conditional(int x, int y, int z) {
  *   Max ops: 24
  *   Rating: 3
  */
+//即找到从左到右第一个不相等的位置
 int isLessOrEqual(int x, int y) {
-  return 2;
+  int opx = x >> 31;
+  int opy = y >> 31;
+  int t = (x + (~y + 1));
+  int op = t >> 31;
+  int tt = (opx & !opy);
+  int equal = !(opx ^ opy);
+  int ttt = !(!opx & opy);
+  // std:: cout << tt << " " << ttt << std::endl;
+  return !equal & ((tt) | (ttt)) | (equal & (op | (!t)));
 }
 //4
 /* 
@@ -259,7 +275,12 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+    
+    int lb = x & -x;
+    lb--;
+
+    return (lb >> 31) & 1;
+
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -275,7 +296,7 @@ int logicalNeg(int x) {
  */
 
 int howManyBits(int x) {
-  int X = x;
+
   //符号位
   int t = 0xff;
   int minus = (~1) + 1;
@@ -283,7 +304,7 @@ int howManyBits(int x) {
   int mid = 16; 
   int len = 4;
 
-  int x = (((~sgn) + 1) ^ X); 
+   x = (((~sgn) + 1) ^ x); 
   int msk = (t << mid + 8) + (t << mid);
   //前16位是否存在1
   int flag16 = !!((msk) & x);
